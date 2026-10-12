@@ -153,7 +153,36 @@
 		<h2>Section II: Triangle Meshes and Half-Edge Data Structure</h2>
 
 		<h3>Part 3: Area-weighted vertex normals</h3>
-		<p>Not started yet.</p>
+		<p>
+			The normal vector is defined as the arrow pointing straight out of the surface.
+			This is what controls lighting, because the surface appears bright whenever the arrow is pointing toward the light, and dark where it points away from it.
+			Flat shading just uses the normal for the whole triangle (which is that triangle's normal). Each face becomes one single flat shade. The result is an image that looks faceted (like the one on the left below).
+			By contrast, phong shading tries to get around this by blending across the triangle surface. It stores a normal at each vertex, then uses vertex normals to blend across and achieve smoother shade changes.
+			This part has the implementation for getting those vertex normals.
+		</p>
+		<p>
+			<code>Vertex::normal</code> builds the normal for a vertex (since normals are defined for the triangles/surfaces).
+			Each vertex is touched by a bunch of triangles that sit in a fan. The half-edge loop will visit them all. It starts at one half-edge leaving the vertex, then <code>twin()-&gt;next()</code> steps to the next triangle. We continue looping across the entire fan until the loop returns to the starting triangle.
+			For each triangle (check that this isn't some boundary just to be sure), we get the vectors from the other two corners at \(p_1\) and \(p_2\) and  the original current vertex \(p_0\).
+			Note that boundary faces are skipped because those are the fake polygon around a hole rather than a triangle. 
+			We then take the cross product of this: cross\((p_1 - p_0,\, p_2 - p_0)\). That vector points out of the triangle being looked at.
+			The sum of these normals for each adjacent/touching triangle is then scaled to length 1 with <code>unit()</code>. This becomes the vertex vector.
+		</p>
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td>
+				  <img src="assets/teapot_flat.png" width="400px" alt="Teapot with flat shading"/>
+				  <figcaption>Flat shading - appears faceted</figcaption>
+				</td>
+				<td>
+				  <img src="assets/teapot_phong.png" width="400px" alt="Teapot with Phong shading"/>
+				  <figcaption>Phong shading - appears smooth</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
 
 		<h3>Part 4: Edge flip</h3>
 		<p>Not started yet.</p>
