@@ -185,7 +185,48 @@
 		</div>
 
 		<h3>Part 4: Edge flip</h3>
-		<p>Not started yet.</p>
+		<p>
+			The goal of this part was to perform an edge flip for a pair of triangles. What this does is change the diagonal that a pair of triangles sharing an edge uses (switch to the other diagonal edge as the shared edge).
+			So, two triangles ABC and BCD that share an edge BC then become 2 triangles that share the other diagonal edge AD.
+			The four outer edges and vertices (A, B, C, D) stay where they are. Only the internal connections to form the internal diagonal edge between those vertices change.
+		</p>
+		<p>
+			The implementation for this function is in <code>HalfedgeMesh::flipEdge</code>, where it is done by reassigning a bunch of pointers.
+			No vertices, edges, faces, or half-edges are created or deleted (consistent with what we outlined below). It really boils down to a bunch of reassigning.
+			The two half-edges on the shared edge need to be flipped. Before, the edge and its twin used to be b->c and c->b.
+			After performing the edge flip, they should be a->d and d->a.
+			The 4 outer edges have to keep their start vertices, so those stay the same. But, the triangles themselves are rebuilt, so the next pointers should be updated to now reflect the new triangles split by the new diagonal.
+			Each vertex, face, and edge is then pointed at a half-edge that still belongs to it.
+			A vertex that kept pointing at the old shared edge would be pointing at a half-edge that now starts somewhere else.
+			Finally, we account for the edge case of getting a boundary edge at the start. This should be returned as is, because it has only one triangle and there is no opposite corner that we could even flip to.
+			All of the original pointers are saved before any call to setNeighbors, since that call overwrites them.
+		</p>
+		<p>
+			The biggest thing that was hard to debug was making sure to save original pointers and references before calling setNeighbors, as that is a mutating call.
+			At first, I forgot that a call to that function would overwrite next, twin, vertex, edge, and face (especially twin).
+			I had initially made the mistake of forgetting to save references to the twins, which led to bugs in my implementation.
+			I had to move all the setNeighbors calls to be together at the end of the function.
+			The other bug showed up after the half-edges themselves were correct.
+			Vertex b was still storing h0 as its half-edge, but the flip changes h0 from b → c into a → d, so it no longer starts at b.
+			The next walk around b followed a half-edge into the wrong triangle and the mesh broke on a second flip.
+			Each vertex had to be pointed at a half-edge that still starts there: b at h4 (b → d) and c at h1 (c → a).
+			Upon fixing this, the flips worked as expected.
+		</p>
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td>
+				  <img src="assets/flip_before.png" width="400px" alt="Teapot before edge flips"/>
+				  <figcaption>No flips.</figcaption>
+				</td>
+				<td>
+				  <img src="assets/flip_after.png" width="400px" alt="Teapot after an edge flip"/>
+				  <figcaption>Flipping some edges (see near highlighted edge).</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
 
 		<h3>Part 5: Edge split</h3>
 		<p>Not started yet.</p>
