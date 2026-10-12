@@ -229,7 +229,47 @@
 		</div>
 
 		<h3>Part 5: Edge split</h3>
-		<p>Not started yet.</p>
+		<p>
+			An edge split basically takes a shared edge and splits/divides it into 2. Then, it adds the other 2 diagonal connections. This turns the 2 trianges into 4 triangles.
+			To be more precise, recall that triangles ABC and BCD share edge BC. Then, we add a new vertex m at the midpoint of BC. We can then split BC into Bm and mC. We also draw new edges from m to opposite corners A and D, forming Am and mD.
+			The four outer edges stay where they are, as they are unchanged by the addition of m.
+		</p>
+		<p>
+			The implementation for this operation is in <code>HalfedgeMesh::splitEdge</code>.
+			It starts very similar to the edge flips, where we extract the same half edges, and from those the vertices, edges, faces, and twins (to avoid the same mistake as last time with setNeighbors).
+			Then, unlike a flip, there are new things being produced. While a flip was 2 triangles -> 2 new triangles, a split makes 4 triangles.
+			This means there is 1 new vertex (m), 3 new edges (one can be reused), 2 new faces (for 2 new triangles), and 6 half-edges (because each edge needs a half-edge in each direction).
+			setNeighbors then builds the four triangles one by one: b->m->a->b, m->c->a->m, m->d->b->m, and c->m->d->c.
+			The new vertex's half-edge is set to m->b, which lies on the edge that was split. The two new lines are marked as new. Both pieces of the original edge are marked as not new.
+			Once again, boundary edges are ignored at the start.
+		</p>
+		<p>
+			Something that I found helpful for debugging this part was drawing stuff out one by one.
+			Especially because we were adding new things, each time I did an operation, I re-updated my diagram to keep the pointers and associated variables up to date.
+			This helped me catch bugs much easier than part 4.
+			I was also able to avoid the same setNeighbor issue as last time by working iteratively: update diagram -> write code to reflect that update -> back to diagram (in a loop).
+		</p>
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td>
+				  <img src="assets/split_before.png" width="400px" alt="Teapot before edge splits"/>
+				  <figcaption>No splits.</figcaption>
+				</td>
+				<td>
+				  <img src="assets/split_after.png" width="400px" alt="Teapot after edge splits"/>
+				  <figcaption>Splits.</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td>
+				  <img src="assets/split_flip.png" width="400px" alt="Teapot after splits and flips"/>
+				  <figcaption>Splits + flips.</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
 
 		<h3>Part 6: Loop subdivision for mesh upsampling</h3>
 		<p>Not started yet.</p>
