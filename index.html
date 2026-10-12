@@ -56,13 +56,13 @@
 
 		<h3>Part 1: Bezier Curves with 1D de Casteljau Subdivision</h3>
 		<p>
-			A Bézier curve is a parametric curve \(x(t)\), \(t \in [0, 1]\) that is defined by various control points.
+			A Bezier curve is a parametric curve \(x(t)\), \(t \in [0, 1]\) that is defined by various control points.
 			It passes through the first and last control points.
 			The other points are called handles, and they are basically directional control lines that help direct the path of the curve.
 			de Casteljau’s algorithm is a method to construct a Bezier curve. It evaluates \(x(t)\) by repeated linear interpolation on the points that define the curve.
 			Each step replaces every adjacent pair with \((1 - t)\, b_i + t\, b_{i+1}\), which is basically the linear interpolation of every pair of neighboring points,so each level has one fewer point.
 			The last remaining point is \(x(t)\) (a point along the curve).
-			A Bézier curve is the path traced by the last point of de Casteljau as \(t\) runs from 0 to 1. One run of the algorithm gives one point. The curve is all of those points.
+			A Bezier curve is the path traced by the last point of de Casteljau as \(t\) runs from 0 to 1. One run of the algorithm gives one point. The curve is all of those points.
 		</p>
 		<p>
 			In terms of the implementation, the <code>BezierCurve::evaluateStep</code> function is responsible for performing single step of the algorithm.
@@ -119,8 +119,36 @@
 			</table>
 		</div>
 
-		<h3>Part 2: Bezier surfaces with separable 1D de Casteljau</h3>
-		<p>Not started yet.</p>
+		<h3>Part 2: Bezier Surfaces with Separable 1D de Casteljau</h3>
+		<p>
+			de Casteljau's algorithm extends from curves to surfaces by applying the same interpolation process in two directions. This means a Bezier surface extends the curve to two parameters, \(u\) and \(v\), both in \([0, 1]\).
+			The input is a grid of control points (rather than a "line" of them).
+			In this assignment each patch is \(4 \times 4\), so each row is itself a Bezier curve parameterized by \(u\).
+			de Casteljau is still an algorithm for evaluating a 1D curve. In order to apply this to a surface, the separable evaluation approach performs it two times.
+			First, evaluate every row at the same \(u\). That produces one point per row, and those points can then become the control points of a moving curve.
+			Then, that moving curve is evaluated at \(v\). The last point is the surface point \(x(u, v)\).
+		</p>
+		<p>
+			In terms of the implementation of this extension, there were 3 different functions that made it up.
+			<code>BezierPatch::evaluateStep</code> is the same one-level linear interp implementation as the Bezier curve function, but the points are now in 3D and \(t\) is an argument, since a surface uses the step once at \(u\) and once at \(v\) (so that value needs to be parameterized).
+			<code>evaluate1D</code> repeats that evaluateStep operation until just one point is left. The curve viewer stops after one level so that E can show each row of the pyramid. A surface only needs the final point, which is what this function returns.
+			<code>evaluate(u, v)</code> calls <code>evaluate1D</code> on every row at \(u\), then calls <code>evaluate1D</code> on those points at \(v\).
+			The algorithm samples the patch on a grid of (u, v) values and stitches the results into triangles.
+			This produced the following teapot result:
+		</p>
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td>
+				  <img src="assets/teapot1.png" width="400px" alt="Utah teapot, front view"/>
+				</td>
+				<td>
+				  <img src="assets/teapot2.png" width="400px" alt="Utah teapot, underside"/>
+				</td>
+			  </tr>
+			</table>
+		</div>
 
 		<h2>Section II: Triangle Meshes and Half-Edge Data Structure</h2>
 
