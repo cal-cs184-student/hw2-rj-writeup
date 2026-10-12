@@ -1,5 +1,6 @@
 <html>
 	<head>
+		<meta charset="utf-8">
 		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
 		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 		<style>
@@ -18,99 +19,125 @@
 
 			img {
 				display: inline-block;
+				max-width: 100%;
 			}
 
 			body {
 				font-family: 'Inter', sans-serif;
+			}
+
+			td {
+				vertical-align: top;
+				padding: 8px;
 			}
 		</style>
 	</head>
 	<body>
 		<div class="container">
 		<h1>CS184/284A Fall 2026 Homework 2 Write-Up</h1>
-		<div style="text-align: center;">Names: </div>
+		<div style="text-align: center;">Names: Ria Jain</div>
 
 		<br>
 
-		Link to webpage: (TODO) <a href="https://cs184.eecs.berkeley.edu/fa26">cs184.eecs.berkeley.edu/fa26</a>
+		Link to webpage: <a href="https://cal-cs184-student.github.io/hw2-rj-writeup/">cal-cs184-student.github.io/hw2-rj-writeup</a>
 
 		<br>
-		
-		Link to GitHub repository: (TODO) <a href="https://cs184.eecs.berkeley.edu/fa26">cs184.eecs.berkeley.edu/fa26</a>
 
-		<figure>
-			<img src="assets/teapot.png" alt="Teapot" style="width:50%"/>
-			<figcaption>You can add images with captions!</figcaption>
-		</figure>
+		Link to GitHub repository: <a href="https://github.com/cal-cs184-student/hw2-rj">github.com/cal-cs184-student/hw2-rj</a>
 
 		<!--
 		We've already added one heading per part, to make your write-up as navigable when grading. Please fit your write-up within these sections!
 		-->
 
 		<h2>Overview</h2>
-		Give a high-level overview of what you implemented in this homework. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the homework.
+		<p>This overview will be filled in after the rest of the assignment.</p>
 
 		<h2>Section I: Bezier Curves and Surfaces</h2>
 
-		<h3>Part 1: Bezier curves with 1D de Casteljau subdivision</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<h3>Part 1: Bezier Curves with 1D de Casteljau Subdivision</h3>
+		<p>
+			A Bézier curve is a parametric curve \(x(t)\), \(t \in [0, 1]\) that is defined by various control points.
+			It passes through the first and last control points.
+			The other points are called handles, and they are basically directional control lines that help direct the path of the curve.
+			de Casteljau’s algorithm is a method to construct a Bezier curve. It evaluates \(x(t)\) by repeated linear interpolation on the points that define the curve.
+			Each step replaces every adjacent pair with \((1 - t)\, b_i + t\, b_{i+1}\), which is basically the linear interpolation of every pair of neighboring points,so each level has one fewer point.
+			The last remaining point is \(x(t)\) (a point along the curve).
+			A Bézier curve is the path traced by the last point of de Casteljau as \(t\) runs from 0 to 1. One run of the algorithm gives one point. The curve is all of those points.
+		</p>
+		<p>
+			In terms of the implementation, the <code>BezierCurve::evaluateStep</code> function is responsible for performing single step of the algorithm.
+			This means that we start with N control points, perform a step, and are left with N-1 points (that is what makes up a single step).
+			The implementation performs N-1 linear interpolations to produce N-1 new points, and then returns those as a vector.
+			The rest of the code calls this function once per level, and so pressing E will show one row of the de Casteljau pyramid at a time.
+		</p>
+		<p>
+			The implementation is tested on the below example, a curve defined by 6 control points.
+			It takes five steps to reach the final red point.
+			The green curve shows the result of the same evaluation using at many values of \(t\) between 0 and 1.
+			Scrolling changes the \(t\) value used in the blue display points.
+			I also tried dragging the control points to change the polygon that those lerps are taken on.
+		</p>
 
-		<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 			  <tr>
-				<td style="text-align: center;">
-				  <img src="assets/teapot.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				<td>
+				  <img src="assets/curve_level0.png" width="400px" alt="Original control points"/>
+				  <figcaption>Level 0: these are the 6 original control points with the final curve in green.</figcaption>
 				</td>
-				<td style="text-align: center;">
-				  <img src="assets/teapot.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				<td>
+				  <img src="assets/curve_level1.png" width="400px" alt="de Casteljau level 1"/>
+				  <figcaption>Level 1: 5 intermediate points shown in blue.</figcaption>
 				</td>
 			  </tr>
 			  <tr>
-				<td style="text-align: center;">
-				  <img src="assets/teapot.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				<td>
+				  <img src="assets/curve_level2.png" width="400px" alt="de Casteljau level 2"/>
+				  <figcaption>Level 2: 4 intermediate points.</figcaption>
 				</td>
-				<td style="text-align: center;">
-				  <img src="assets/teapot.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				<td>
+				  <img src="assets/curve_level3.png" width="400px" alt="de Casteljau level 3"/>
+				  <figcaption>Level 3: 3 intermediate points.</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td>
+				  <img src="assets/curve_level4.png" width="400px" alt="de Casteljau level 4"/>
+				  <figcaption>Level 4: 2 intermediate points.</figcaption>
+				</td>
+				<td>
+				  <img src="assets/curve_level5.png" width="400px" alt="de Casteljau level 5"/>
+				  <figcaption>Level 5: the final evaluated point, in red, on the curve (t=0.5, so the midpoint).</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td>
+				  <img src="assets/curve_moved.png" width="400px" alt="Moved control points"/>
+				  <figcaption>The same curve after moving control points and changing \(t\). We can see that the curve is slightly different around the changed points, the blue points are closer to the left control point (t < 0.5).</figcaption>
 				</td>
 			  </tr>
 			</table>
 		</div>
 
 		<h3>Part 2: Bezier surfaces with separable 1D de Casteljau</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p>Not started yet.</p>
 
 		<h2>Section II: Triangle Meshes and Half-Edge Data Structure</h2>
 
 		<h3>Part 3: Area-weighted vertex normals</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p>Not started yet.</p>
 
 		<h3>Part 4: Edge flip</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p>Not started yet.</p>
 
 		<h3>Part 5: Edge split</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p>Not started yet.</p>
 
 		<h3>Part 6: Loop subdivision for mesh upsampling</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p>Not started yet.</p>
 
 		<h2>(Optional) Section III: Potential Extra Credit - Art Competition: Model something Creative</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-		<h2>Additional Notes (please remove)</h2>
-		<ul>
-			<li>You can also add code if you'd like as so: <code>code code code</code></li>
-			<li>If you'd like to add math equations, 
-				<ul>
-					<li>You can write inline equations like so: \( a^2 + b^2 = c^2 \)</li>
-					<li>You can write display equations like so: \[ a^2 + b^2 = c^2 \]</li>
-				</ul>
-			</li>
-		</ul>
+		<p>Not started yet.</p>
 		</div>
 	</body>
 </html>
