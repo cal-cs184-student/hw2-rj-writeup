@@ -272,10 +272,159 @@
 		</div>
 
 		<h3>Part 6: Loop subdivision for mesh upsampling</h3>
-		<p>Not started yet.</p>
+		<p>
+			The final part of this is to implement loop subdivision, which upsamples a mesh.
+			Each run of this will replace every triangle with four smaller ones (from those triangle's edges) and the move the vertices so the surface gets smoother.
+			The new vertices are not plain midpoints along them, and the old vertices also do not have to stay in their old position.
+			Both are moved by a weighted average of their neighbors. That averaging is what helps get rid of the sharp corners and achieve a more round shape.
+		</p>
+		<p>
+			The implementation of each step of this upsampling logic is in <code>MeshResampler::upsample</code>.
+			The first thing we do is compute the new position from the original mesh. We then store these new positions, but this needs to be done before the edges are actually split.
+			This is because new positions need to be computed from the original mesh before any vertices are moved. Otherwise, the calculations would be using changing values and thus be wrong.
+		</p>
+		<p>
+			For each old vertex, we can get n = degree = the number of triangles that touch it.
+			We can set the weight on the neighbors as u. Based on the lecture, we know that n = 3 => u = 3/16, and n != 3 => u = 3 / (8n).
+			The explanaiton for this is that if n is small, it should get a bigger u. This means that a vertex is more influenced by the neighbors (and vice-versa).
+			We do the same walk as whatever we used for the vertex normal. The neighbor across each edge is h->twin()->vertex (twin flips the edge, vertex gets the other vertex than the one we are currently looking at).
+			The stored position is then the weighted sum of the current position and the sum of the neighbor positions.
+		</p>
+		<p>
+			For each edge, the new point uses the two endpoints and the two opposite corners.
+			The position that we store becomes 3/8(b+c) + 1/8(a+d).
+			The endpoints (b and c) count more than the opposite corners, which is why it has higher weightage.
+			As a result, the new point stays near the middle of the edge and only slides a little toward the new endpoints (a and d).
+		</p>
+		<p>
+			The next is to split edges, but only the original ones. We iterate through all the edges (note: one bug that I realized is that I have to save nEdges() before the loop since its actively being modified).
+			I also had to use the edge iterator from before the call to splitEdge -- another tricky realization. This is because slitEdge will insert new edges. So, we need to work with the original set.
+			splitEdge puts the new vertex m at the midpoint and b and c. We replace this with the weighted position for that edge.
+			We also keep isNew up to date for the edges. This is so that whenever that value is used in the algorithm is used, it is reliable.
+		</p>
+		<p>
+			The flips turn the splits into Loop's pattern.
+			After the splits, each triangle has new edges going from the midpoints to the old corners. However, those edges are going wrong way. They therefore need to be flipped.
+			We only do this to new edges though. Another bug that was found is that the endpoints should not both be new or both be old (exactly one should be new). This was debugged by looking at the funky diagonal patterns that emerged when I did not do this processing properly (the GUI tells the information, and I used that debug the implementation).
+			The other edges for which this doesn't apply will stay unchanged.
+			Finally, the originally calculated newPosition from the beginning is then applied to every vertex. Those positions were computed up front, but they just need to be applied now.
+		</p>
 
-		<h2>(Optional) Section III: Potential Extra Credit - Art Competition: Model something Creative</h2>
-		<p>Not started yet.</p>
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td>
+				  <img src="assets/loop_bug.png" width="400px" alt="Teapot with twisted Loop connectivity"/>
+				  <figcaption>This was the result of flipping every new edge, which would have included edges between 2 new midpoints. The positions are roughly right, but the triangles have a weird diagonal/swirl pattern which isn't what we want.</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<p>
+			Teapot results: as we upsample more and more, the body, lid, spout, and handle (the components of the teapot) generally keep their shape.
+			However, the sharp creases round up as more and more upsampling is done. This is most apparent by the lip of the lid and the tip of the spout, as those are some of the more rounded parts of the pot.
+			The results also include close-up views so its a bit easier to see. Without upsampling, the spout starts as a few big triangles with a sharp tip. After two iterations, the tip is much rounded and the surface is a dense mesh.
+		</p>
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td>
+				  <img src="assets/loop_teapot_0.png" width="400px" alt="Teapot before Loop subdivision"/>
+				  <figcaption>Teapot (no iterations)</figcaption>
+				</td>
+				<td>
+				  <img src="assets/loop_teapot_1.png" width="400px" alt="Teapot after one Loop subdivision"/>
+				  <figcaption>1 iteration gets it slightly rounder</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td>
+				  <img src="assets/loop_teapot_2.png" width="400px" alt="Teapot after two Loop subdivisions"/>
+				  <figcaption>2 iterations gets it much smoother</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td>
+				  <img src="assets/loop_spout_0.png" width="400px" alt="Spout before Loop subdivision"/>
+				  <figcaption>Close-up view of the spout, where the tip is a sharp corner</figcaption>
+				</td>
+				<td>
+				  <img src="assets/loop_spout_2.png" width="400px" alt="Spout after two Loop subdivisions"/>
+				  <figcaption>Same view of the spout after 2 iterations, and now the tip has rounded off</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<p>
+			Cube results: this is the view of a cube whose faces are already split into two triangles.
+			A corner that a diagonal touches sits in both triangles of that face. A corner the diagonal misses sits in only one.
+			Since every corner meets three faces, the eight corners do not all have the same degree.
+			The weight directly depends on that degree. When n=3, it gets pulled harder, but otherwise it stays closer to where it was.
+			After a few iterations the cube gets smoother, but it rounds unevenly and the faces go lopsided.
+		</p>
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td>
+				  <img src="assets/cube_0.png" width="400px" alt="Cube before Loop subdivision"/>
+				  <figcaption>Original cube</figcaption>
+				</td>
+				<td>
+				  <img src="assets/cube_1.png" width="400px" alt="Cube after one Loop subdivision"/>
+				  <figcaption>1 iteration - corners start to round, can already see unevenness</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td>
+				  <img src="assets/cube_2.png" width="400px" alt="Cube after two Loop subdivisions"/>
+				  <figcaption>2 iterations</figcaption>
+				</td>
+				<td>
+				  <img src="assets/cube_3.png" width="400px" alt="Cube after three Loop subdivisions"/>
+				  <figcaption>3 iterations - smoother but very lopsided</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<p>
+			Splitting edges before any step changes those degrees.
+			This time, when the cube launched, I split each of the 12 outlined edges once. I did not split the face diagonals.
+			Every outline edge then has a vertex in its middle, and each corner is now next to those nearby midpoints instead of only to the far corners of the cube.
+			Splitting the three edges that meet at a corner also adds triangles around it, so its degree goes up, making the weight smaller.
+			This means the corner is not pulled as far.
+			Three Loop steps after that stay closer to a rounded box. The corners are sharper, and the result ends up being a bit more even.
+		</p>
+		<p>
+			Splitting only the three edges that meet at one corner does the same thing in one place.
+			That corner's degree goes up and its neighbors are now close midpoints, so it stays pointier. The other corners still round off the normal way.
+		</p>
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td>
+				  <img src="assets/cube_presplit.png" width="400px" alt="Cube with all 12 edges split"/>
+				  <figcaption>All 12 outline edges split once (no steps)</figcaption>
+				</td>
+				<td>
+				  <img src="assets/cube_presplit_3.png" width="400px" alt="Pre-split cube after three Loop subdivisions"/>
+				  <figcaption>3 iterations (sharper corners + a more even shape)</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td>
+				  <img src="assets/cube_onecorner.png" width="400px" alt="Cube with one corner's edges pre-split"/>
+				  <figcaption>Only split the three edges at one of the corners + 3 iterations, so that corner stays pointier</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
 		</div>
 	</body>
 </html>
