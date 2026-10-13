@@ -50,7 +50,12 @@
 		-->
 
 		<h2>Overview</h2>
-		<p>This overview will be filled in after the rest of the assignment.</p>
+		<p>
+			This assignment was about representing and editing geometry, first as Bezier curves and surfaces and then as triangle meshes.
+			Section I uses de Casteljau's algorithm. A Bezier curve is built by repeatedly linearly interpolating neighboring control points until one point is left, and a Bezier surface does that same 1D process twice (once in u, once in v) on a grid of control points.
+			Section II switches to the half-edge data structure. I implemented area-weighted vertex normals for Phong shading, then two local mesh edits: an edge flip (which just rewires the shared diagonal of two triangles) and an edge split (which inserts a midpoint and turns those two triangles into four).
+			Those two operations are then used for Loop subdivision, which upsamples a mesh by splitting every original edge, flipping the new edges that connect an old vertex to a new midpoint, and moving vertices with Loop's weighted averages so the surface gets smoother.
+		</p>
 
 		<h2>Section I: Bezier Curves and Surfaces</h2>
 
